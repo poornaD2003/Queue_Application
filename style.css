@@ -216,6 +216,7 @@ button:active {
 #reader {
     width: 100%;
     height: 100%;
+    border-radius: 20px;
 }
 
 .result-group {
@@ -338,6 +339,7 @@ button:active {
     padding: 0;
     border: none;
     min-height: 250px;
+    overflow: hidden;
 }
 
 .result-group {
