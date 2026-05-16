@@ -1,5 +1,5 @@
 // --- Firebase Configuration ---
-const firebaseConfig = {
+/*const firebaseConfig = {
     apiKey: "AIzaSyA0RZ_9PjrRMjcGoYUvEKlZeGtGQbDbBEg",
     authDomain: "queue-manage-653af.firebaseapp.com",
     projectId: "queue-manage-653af",
@@ -7,14 +7,28 @@ const firebaseConfig = {
     messagingSenderId: "327457406558",
     appId: "1:327457406558:web:c6d71a24bb7485e5e0fecf",
     measurementId: "G-2XZP32T69P"
-};
+};*/
+
+const firebaseConfig = {
+    apiKey: "AIzaSyDQF6Ax8-96AKns_8XpgM-MDrtaVDc78CU",
+  authDomain: "ecosystem-e703c.firebaseapp.com",
+  databaseURL: "https://ecosystem-e703c-default-rtdb.firebaseio.com",
+  projectId: "ecosystem-e703c",
+  storageBucket: "ecosystem-e703c.firebasestorage.app",
+  messagingSenderId: "127085232481",
+  appId: "1:127085232481:web:edc94cfe0b5a86d8a40520",
+  measurementId: "G-6FNBEKNFSQ"
+}
 
 // Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
 // Global State
-let html5QrCode = null;
+//let html5QrCode = null;
+//let scannerActive = false;
+
+let scanner = null;
 let scannerActive = false;
 
 // --- 1. Authentication & Redirection Guard ---
@@ -144,8 +158,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 const resumeBtn = document.getElementById('resume-btn');
+
 // --- 4. QR Scanner Engine ---
-async function initScanner() {
+/*async function initScanner() {
     const scanResultBox = document.getElementById('scan-result');
     if (!scanResultBox || scannerActive) return;
 
@@ -189,15 +204,74 @@ if (resumeBtn) {
         initScanner();
     });
 }
+    */
+   async function initScanner() {
+    const scanResultBox = document.getElementById('scan-result');
+    const video = document.getElementById('reader');
 
-async function stopScanner() {
+    if (!scanResultBox || scannerActive) return;
+
+    try {
+
+        scanner = new QrScanner(
+            video,
+            (result) => {
+
+                scanner.stop();
+                scannerActive = false;
+
+                scanResultBox.textContent = "Redirecting to Kiosk...";
+                scanResultBox.classList.add('success-glow');
+
+                const qrData = result.data || result;
+
+                setTimeout(() => {
+                    window.location.href =
+                        `service.html?kioskid=${encodeURIComponent(qrData)}`;
+                }, 500);
+            },
+            {
+                preferredCamera: 'environment',
+                highlightScanRegion: true,
+                highlightCodeOutline: true,
+                returnDetailedScanResult: true,
+            }
+        );
+
+        await scanner.start();
+
+        scannerActive = true;
+
+        scanResultBox.textContent =
+            "📷 Position QR code inside the frame";
+
+    } catch (err) {
+
+        console.error(err);
+
+        scanResultBox.textContent =
+            "❌ Camera Error: " + err.message;
+    }
+}
+
+/*async function stopScanner() {
     if (html5QrCode && scannerActive) {
         await html5QrCode.stop();
         html5QrCode.clear();
         scannerActive = false;
     }
 }
+*/
 
+async function stopScanner() {
+
+    if (scanner) {
+
+        await scanner.stop();
+
+        scannerActive = false;
+    }
+}
 // --- 5. Error Helper ---
 function handleAuthError(error) {
     if (error.code === 'auth/user-not-found') alert('No account found with this email.');
