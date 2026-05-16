@@ -1,5 +1,5 @@
 // --- Firebase Config (Ensure this matches your script.js) ---
-const firebaseConfig = {
+/*const firebaseConfig = {
     apiKey: "AIzaSyA0RZ_9PjrRMjcGoYUvEKlZeGtGQbDbBEg",
     authDomain: "queue-manage-653af.firebaseapp.com",
     projectId: "queue-manage-653af",
@@ -7,7 +7,18 @@ const firebaseConfig = {
     storageBucket: "queue-manage-653af.firebasestorage.app",
     messagingSenderId: "327457406558",
     appId: "1:327457406558:web:c6d71a24bb7485e5e0fecf"
-};
+};*/
+const firebaseConfig = {
+
+    apiKey: "AIzaSyDQF6Ax8-96AKns_8XpgM-MDrtaVDc78CU",
+  authDomain: "ecosystem-e703c.firebaseapp.com",
+  databaseURL: "https://ecosystem-e703c-default-rtdb.firebaseio.com",
+  projectId: "ecosystem-e703c",
+  storageBucket: "ecosystem-e703c.firebasestorage.app",
+  messagingSenderId: "127085232481",
+  appId: "1:127085232481:web:edc94cfe0b5a86d8a40520",
+  measurementId: "G-6FNBEKNFSQ"
+}
 
 // Initialize
 firebase.initializeApp(firebaseConfig);
@@ -33,6 +44,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // 2. Listen for Auth State
     auth.onAuthStateChanged((user) => {
         if (user) {
+            // Display user UID
+            console.log(`User UID: ${user.uid}`);
+            display.textContent = ` KIOSK UID: ${user.uid}`;
             loadKioskServices(user.uid, kioskId);
         } else {
             window.location.href = 'login.html';
@@ -75,6 +89,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Global function to handle token generation
 function requestToken(serviceId) {
-    alert(`Token requested for ${serviceId}! Linking to queue system...`);
-    // Here you would write to the 'queue' node in your Firebase
+    // orgId = the logged-in user's UID (the organisation that owns this kiosk)
+    const user = firebase.auth().currentUser;
+    if (!user) { window.location.href = 'login.html'; return; }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const kioskId   = urlParams.get('kioskid') || 'WALK_IN';
+
+    const params = new URLSearchParams({
+        orgId:     user.uid,
+        serviceId: serviceId,
+        kioskId:   kioskId,
+    });
+
+    window.location.href = 'token.html?' + params.toString();
 }
