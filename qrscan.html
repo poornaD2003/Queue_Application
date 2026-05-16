@@ -7,7 +7,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <!-- QR Code Scanning Library -->
-<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>    <!-- Firebase Compat SDKs -->
+    <!--<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script> -->
+
+    <script type="module">
+    import QrScanner from "https://unpkg.com/qr-scanner@1.4.2/qr-scanner.min.js";
+    window.QrScanner = QrScanner;
+    </script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 </head>
@@ -23,7 +28,8 @@
 
         <div class="tab-content active" id="scan-tab">
             <div id="reader-container" class="qr-box scan-box">
-                <div id="reader"></div>
+                <!--<div id="reader"></div>-->
+                <video id="reader" playsinline></video>
             </div>
             <div class="result-group">
     <p>Scanned Result:</p>
