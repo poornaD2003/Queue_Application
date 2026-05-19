@@ -49,6 +49,7 @@ function generateTokenId() {
 const urlParams = new URLSearchParams(window.location.search);
 const orgId     = urlParams.get('orgId');
 const serviceId = urlParams.get('serviceId');
+const serviceName = urlParams.get('serviceName') || 'Requested Service';
 const kioskId   = urlParams.get('kioskId') || 'WALK_IN';
 
 // Validate required params
@@ -76,7 +77,7 @@ auth.onAuthStateChanged(async (user) => {
 });
 
 // ── Join Queue ────────────────────────────────
-async function joinQueue(orgId, serviceId, kioskId, customerUid) {
+/*async function joinQueue(orgId, serviceId, kioskId, customerUid) {
     try {
         // 1. Verify service exists
         const serviceSnap = await db.ref(`users/${orgId}/services/${serviceId}`).once('value');
@@ -155,7 +156,83 @@ function startQueueListener(orgId, serviceId) {
         console.error('Queue listener error:', err);
     });
 }
+*/
 
+async function joinQueue(orgId, serviceId, kioskId, customerUid) {
+    try {
+       
+        const myTokenNodeRef = db.ref(`users/${customerUid}/tokens`);
+        
+        const existingSnap = await myTokenNodeRef
+            .orderByChild('serviceId')
+            .equalTo(serviceId)
+            .once('value');
+
+        let existingToken = null;
+        if (existingSnap.exists()) {
+            existingSnap.forEach(child => {
+                const t = child.val();
+                if (t.status === 'waiting' || t.status === 'serving') {
+                    existingToken = t;
+                }
+            });
+        }
+
+        if (existingToken) {
+            // Re-attach to existing token
+            myTokenId     = existingToken.id;
+            myTokenNumber = existingToken.tokenNumber;
+        } else {
+            // 3. Create new token structure
+            myTokenNumber = generateTokenNumber();
+            myTokenId     = generateTokenId();
+
+            const tokenData = {
+                id:                  myTokenId,
+                tokenNumber:         myTokenNumber,
+                serviceId:           serviceId,
+                serviceName:         serviceName, // Using URL parsed data
+                organizationId:      orgId,
+                kioskId:             kioskId,
+                customerUid:         customerUid,
+                timestamp:           firebase.database.ServerValue.TIMESTAMP,
+                status:              'waiting',      // waiting | serving | done
+                assignedCounterId:   null,
+                assignedCounterName: null,
+            };
+
+            // Save under customer node path so rules accept the write payload
+            await db.ref(`users/${customerUid}/tokens/${myTokenId}`).set(tokenData);
+        }
+
+        // 4. Show the UI and listen for modifications
+        hide('loading-view');
+        show('token-view');
+        $id('token-number-display').textContent = myTokenNumber;
+        $id('service-name-display').textContent  = serviceName;
+        $id('org-display').textContent           = `Organisation: ${orgId}`;
+
+        // Listen for active data state modifications
+        startQueueListener(customerUid);
+
+    } catch (err) {
+        console.error('joinQueue error:', err);
+        showError('Failed to join queue: ' + err.message);
+    }
+}
+
+// ── Live Queue Listener (Updated Path) ───────────────────────
+function startQueueListener(customerUid) {
+    // Listen directly to the customer's own written token instance path
+    const queueRef = db.ref(`users/${customerUid}/tokens`);
+
+    queueListener = queueRef.on('value', (snapshot) => {
+        const all = snapshot.val() || {};
+        updateQueueUI(all);
+    }, (err) => {
+        console.error('Queue listener error:', err);
+    });
+}
 // ── Update UI from queue snapshot ────────────
 function updateQueueUI(allTokens) {
     // Sort all waiting tokens by timestamp (oldest first = position 1)
