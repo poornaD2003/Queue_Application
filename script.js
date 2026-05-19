@@ -227,7 +227,8 @@ if (resumeBtn) {
 
                 setTimeout(() => {
                     window.location.href =
-                        `service.html?kioskid=${encodeURIComponent(qrData)}`;
+                       // `service.html?kioskid=${encodeURIComponent(qrData)}`;
+                       `service.html?orgId=${encodeURIComponent(qrData)}&kioskId=WALK_IN`;
                 }, 500);
             },
             {
@@ -284,4 +285,20 @@ function handleAuthError(error) {
 document.addEventListener('visibilitychange', () => {
     if (document.hidden) stopScanner();
     else if (window.location.pathname.includes('qrscan.html')) initScanner();
+});
+
+auth.onAuthStateChanged((user) => {
+    const currentPage = window.location.pathname.split("/").pop();
+
+    if (user) {
+        // If logged in and trying to access landing/auth screens, send to selection menu
+        if (currentPage === "login.html" || currentPage === "signup.html" || currentPage === "") {
+            window.location.href = 'selectionPage.html';
+        }
+    } else {
+        // Protected routes configuration
+        if (currentPage === "qrscan.html" || currentPage === "selectionPage.html" || currentPage === "service.html" || currentPage === "token.html") {
+            window.location.href = 'login.html';
+        }
+    }
 });
