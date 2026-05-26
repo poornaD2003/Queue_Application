@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
             bookingType: 'online'
         });
 
-        window.location.href = 'token.html?' + params.toString();
+        window.location.href = 'bookAppointment.html?' + params.toString();
     };
 
     // Helper function to escape HTML string inputs safely
