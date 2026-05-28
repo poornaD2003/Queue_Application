@@ -66,6 +66,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const dateValue = document.getElementById('appointment-date').value;
         const timeValue = document.getElementById('appointment-time').value;
 
+        if (phoneValue.length > 10 || !/^\d*$/.test(phoneValue)) {
+            alert('⚠️ Phone number must be 10 digits or fewer.');
+            return;
+        }
+
         // Create a unique appointment ID reference node under the specific organization
         const orgAppointmentsRef = db.ref(`users/${orgId}/onlineAppointments`).push();
         const appointmentId = orgAppointmentsRef.key;
