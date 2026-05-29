@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Handle form submission logic
+   // Handle form submission logic
     bookingForm.addEventListener('submit', (e) => {
         e.preventDefault();
 
@@ -65,11 +65,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const emailValue = document.getElementById('customer-email').value.trim();
         const dateValue = document.getElementById('appointment-date').value;
         const timeValue = document.getElementById('appointment-time').value;
-
-        if (phoneValue.length > 10 || !/^\d*$/.test(phoneValue)) {
-            alert('⚠️ Phone number must be 10 digits or fewer.');
-            return;
-        }
 
         // Create a unique appointment ID reference node under the specific organization
         const orgAppointmentsRef = db.ref(`users/${orgId}/onlineAppointments`).push();
@@ -89,7 +84,10 @@ document.addEventListener('DOMContentLoaded', () => {
         // Save strictly under the organization's node path
         orgAppointmentsRef.set(appointmentData)
             .then(() => {
-                alert("🎉 Appointment Booked Successfully!");
+                // 🌟 FIREBASE TRANSACTION COMPLETED SUCCESSFULLY -> TRIGGER EMAIL NOW
+                sendConfirmationEmail(emailValue, nameValue, dateValue, timeValue);
+                
+                alert("🎉 Appointment Booked Successfully & Confirmation Email Sent!");
                 // Redirect back to the main appointments overview directory
                 window.location.href = 'appointments.html';
             })
@@ -98,4 +96,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert(`⚠️ Database error: ${error.message}`);
             });
     });
+
+    // New helper function to process the EmailJS API delivery request
+    function sendConfirmationEmail(targetEmail, customerName, appointmentDate, appointmentTime) {
+        // Map form parameters to the matching template tokens inside your dashboard
+        const templateParams = {
+            customerName: customerName,
+            appointmentDate: appointmentDate,
+            appointmentTime: appointmentTime,
+            email: targetEmail 
+        };
+
+        // Send the payload securely via the EmailJS client engine
+        // Replace placeholders below with your exact dashboard strings
+        emailjs.send('service_adcclwr', 'template_6o00nsh', templateParams)
+            .then((response) => {
+                console.log('Email dispatched successfully!', response.status, response.text);
+            }, (error) => {
+                console.error('Email delivery engine failed:', error);
+            });
+    }
 });
